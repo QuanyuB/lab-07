@@ -24,18 +24,34 @@ evals<-read.csv("data/evals.csv", row.names=1)
 1.  Visualize the distribution of `score` in the dataframe `evals`.
 
 ```{r viz-score}
-# add code here
+
+theme_set(theme_bw())
+
+evals %>%
+  ggplot(mapping = aes (x = score)) +
+  geom_histogram(binwidth = 1, 
+                 colour = "darkblue",
+                 fill = "lightgreen"
+                 )
+
+
 ```
 
-*Add your other details and narratives here.*
+*The distribution is left skewed, meaning that most students give a high score to their courses. This is a value that I somehow expected, as most students very dissatisfied with their courses would probably drop out, some of them may have a biased opinion, therefore there are not as many negative opinions. I can see that most students gave a score between 4 and 5, this can be interpreted as they liked the course, but there were definitely aspects that could be improved.*
 
 2.  Visualize and describe the relationship between `score` and `bty_avg` using `geom_point()` to represent the data. 
 
 ```{r scatterplot}
-# add code here
+evals %>%
+  ggplot(mapping = aes (x = score, y = bty_avg)) +
+  geom_point(shape= 19)
+
+evals %>%
+  ggplot(mapping = aes (x = score, y = bty_avg)) +
+  geom_jitter(shape= 19)
 ```
 
-*Add your narrative and other details here.*
+*The problem with plotting with geom_point is that the data seems to be too tidy, it has like some pattern, but with geom_jitter, the data is more randomly distributed with no clear patter, therefore the jitter plot is way better in this case for representing the data. Jitter plot is a variant of the strip plot with a better view of overlapping data points, used to visualise the distribution of many individual one-dimensional values.*
 
 # Exercise 2: Simple Linear regression with a numerical predictor
 
@@ -45,12 +61,12 @@ evals<-read.csv("data/evals.csv", row.names=1)
 # remove eval = FALSE from the code chunk options after filling in the blanks
 score_bty_fit <- linear_reg() %>%
   set_engine("lm") %>%
-  fit(___ ~ ___, data = ___)
+  fit(score ~ bty_avg, data = evals) 
 ```
 
 ```{r tidy-score_bty_fit, eval = FALSE}
 # remove eval = FALSE from the code chunk options after filling in the blanks
-tidy(___)
+tidy(score_bty_fit)
 ```
 
 *Add your linear model here. Don't worry too much about notation, you can use things like score-hat.*
@@ -59,32 +75,41 @@ tidy(___)
 
 ```{r viz-score_bty_fit,eval=FALSE}
 # add your plot here. Hint, you can add the regression line using geom_smooth()
+evals %>%
+  ggplot(mapping = aes (x = score, y = bty_avg)) +
+  geom_jitter(shape= 19) + 
+  geom_smooth(method = "lm", se = FALSE)
 ```
 
 3. Interpret the slope of the linear model in context of the data.
 
-*Add your interpretation here*
+*As we can see, the line of best fit presents a positive slope, meaning that the score and the beauty of professor is related positively. That is to say, the higher the score, the higher the beauty of the professor. For every point the score goes up, the beauty value is expected to be 0.067 higher*
 
 4. Interpret the intercept of the linear model in context of the data. Comment on whether or not the intercept makes sense in this context.
 
-*Add your interpretation here*
+*If you try to extrapolate the values of the linear model, you can see that when it intercepts with the y axis, y≠0 and x=0, this does makes sense, because even if the score is zero, the professor still can have some kind of beauty.*
 
 5. Determine the $R^2$ of the model and interpret it in the context of the data.
 
 ```{r R2, eval = FALSE}
 # remove eval = FALSE from the code chunk options after filling in the blanks
-glance(___)$___
+glance(score_bty_fit)$r.squared
 ```
 
-*Add your interpretation here*
+*The value of R squared is very low, near zero instead of 1, this means that the data relationship is very weak, positive*
 
 6. Make a plot of residuals vs. predicted values for the model above.
 
 ```{r viz-score_bty_fit-diagnostic, eval = FALSE}
 # remove eval = FALSE from the code chunk options after filling in the blanks
-score_bty_aug <- augment(score_bty_fit$fit)
+score_bty_aug <- augment(score_bty_fit$fit) 
 
-ggplot(___) + ...
+
+ggplot(data = score_bty_aug) +
+  geom_jitter(mapping = aes(x = score, y = bty_avg)) +
+  geom_point(mapping = aes(x = score,y = .fitted), color = "blue") + 
+  geom_hline(yintercept = 0, linetype = "dashed")
+ 
 ```
 
 # Exercise 3: Simple Linear regression with a categorical predictor
@@ -92,7 +117,13 @@ ggplot(___) + ...
 0. Look at the variable rank, and determine the frequency of each category level.
 
 ```{r}
-# ... 
+evals %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = rank),
+           color = "blue",
+           fill = "lightgreen")
+
+ 
 ```
 
 1. Fit a new linear model called `score_rank_fit` to predict average professor evaluation `score` based on `rank` of the professor.
